@@ -9,6 +9,7 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
   const [progressText, setProgressText] = useState('');
+  const [isHovering, setIsHovering] = useState(false);
 
   const handleFileChange = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -98,7 +99,7 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      //backgroundColor: '#1d1f24',
+      backgroundColor: isHovering ? '#374151' : '#192231',
       transition: 'background 0.3s',
     },   
     textarea: {
@@ -142,10 +143,10 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
       backgroundColor: '#4F46E5',
     },
     loadingBox: {
-      marginTop: 10,
+      marginTop: 20,
       padding: 10,
-      backgroundColor: '#586caedc',
-      border: '1px solid #cbd5e1',
+      backgroundColor: '#20283A',
+      //border: '1px solid #cbd5e1',
       borderRadius: 6,
       textAlign: 'center',
     },
@@ -163,7 +164,12 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
     <div style={styles.container}>
       <h2>Instant Summarize + QnA + Flashcards</h2>
 
-      <label style={styles.uploadBox}>
+      <label
+        style={styles.uploadBox}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+      
         <input type="file" onChange={handleFileChange} multiple hidden />
         <div>
           📤 <strong>Click to upload</strong><br />

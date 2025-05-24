@@ -88,7 +88,7 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      //backgroundColor: isHovering ? '#23262e' : '#1d1f24',
+      backgroundColor: isHovering ? '#374151' : '#192231',
       transition: 'background 0.3s',
     },
     textarea: {
@@ -124,13 +124,13 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       background: '#374151',
     },
     downloadBtn: {
-      background: '#198754',
+      background: '#AEB1CA',
     },
     loadingBox: {
-      marginTop: 10,
+      marginTop: 20,
       padding: 10,
-      backgroundColor: '#586caedc',
-      border: '1px solid #cbd5e1',
+      backgroundColor: '#20283A',
+      //border: '1px solid #cbd5e1',
       borderRadius: 6,
       textAlign: 'center',
     },
