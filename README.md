@@ -11,15 +11,7 @@ It supports multiple file formats including PDF, DOCX, PPTX, XLSX, TXT, and even
 
 ## Project Structure
 
-QuickRecap/
-├── frontend/ # React frontend
-└── backend/ # Flask backend
-├── app.py
-├── summarizer.py
-├── qna.py
-├── flashcards.py
-├── pdf_utils.py
-└── requirements.txt
+<pre> 📁 <strong>QuickRecap/</strong> ├── 📦 <strong>frontend/</strong> # React frontend │ ├── 📁 public/ │ └── 📁 src/ │ ├── 📄 App.js │ ├── 📄 App.css │ ├── 📄 index.js │ ├── 📄 index.css │ └── 📁 components/ │ ├── 📄 Header.js │ ├── 📄 Summarizer.js │ ├── 📄 QnAGenerator.js │ └── 📄 Flashcards.js │ └── 📦 <strong>backend/</strong> # Flask backend ├── 📄 app.py ├── 📄 summarizer.py ├── 📄 qna.py ├── 📄 flashcards.py ├── 📄 pdf_utils.py └── 📄 requirements.txt </pre>
 
 
 ---
