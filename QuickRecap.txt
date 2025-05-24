@@ -1,0 +1,1015 @@
+Project structure:
+>QR
+  >frontend
+    >public
+    >src
+      App.js
+      App.css
+      index.js			
+      index.css
+      >components
+        Header.js
+        Summarizer.js
+        QnAGenerator.js
+        Flashcards.js
+  >backend
+    -app.py
+    -summarizer.py
+    -qna.py
+    -flashcards.py
+    -pdf_utils
+    -requirements.txt
+
+
+//App.js
+
+import React, { useState } from 'react';
+import Header from './components/Header';
+import Summarizer from './components/Summarizer';
+import Flashcards from './components/Flashcards';
+import QnAGenerator from './components/QnAGenerator';
+
+function App() {
+  const [activeTab, setActiveTab] = useState('summarize');
+  const [qnaData, setQnaData] = useState([]);
+  const [flashcardsData, setFlashcardsData] = useState([]);
+
+  return (
+    <div className="App">
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      {activeTab === 'summarize' && (
+        <Summarizer setQnaData={setQnaData} setFlashcardsData={setFlashcardsData} />
+      )}
+      {activeTab === 'qna' && <QnAGenerator qnaData={qnaData} setQnaData={setQnaData} />}
+      {activeTab === 'flashcards' && <Flashcards flashcardsData={flashcardsData} setFlashcardsData={setFlashcardsData} />}
+    </div>
+  );
+
+export default App;
+
+
+
+/*App.css*/
+
+/* Base styling */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #192231;
+  color: white;
+  padding-top: 60px
+}
+
+.App {
+  padding: 20px;
+}
+
+/* Navigation Bar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background-color: #0e1420;
+  border-bottom: 1px solid #2d333b;
+}
+
+
+.logo {
+  color: #7F8AF4;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 16px;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  color: #b0b9cc;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 6px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.nav-btn:hover {
+  background-color: #2d3748;
+  color: white;
+}
+
+.nav-btn.active {
+  background-color: #4F46E5;
+  color: white;
+}
+
+
+
+//Header.js
+
+import React from 'react';
+
+function Header({ activeTab, setActiveTab }) {
+  return (
+    <nav className="navbar">
+      <div className="logo">Quick Recap</div>
+      <div className="nav-links">
+        <button
+          className={activeTab === 'summarize' ? 'nav-btn active' : 'nav-btn'}
+          onClick={() => setActiveTab('summarize')}
+        >
+          Summarize
+        </button>
+        <button
+          className={activeTab === 'qna' ? 'nav-btn active' : 'nav-btn'}
+          onClick={() => setActiveTab('qna')}
+        >
+          QnA
+        </button>
+        <button
+          className={activeTab === 'flashcards' ? 'nav-btn active' : 'nav-btn'}
+          onClick={() => setActiveTab('flashcards')}
+        >
+          Flashcards
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+export default Header;
+
+
+
+
+//Summarizer.js
+
+import React, { useState } from 'react';
+
+function Summarizer({ setQnaData, setFlashcardsData }) {
+  const [files, setFiles] = useState([]);
+  const [text, setText] = useState('');
+  const [summaryLevel, setSummaryLevel] = useState('summary');
+  const [generateFlashcards, setGenerateFlashcards] = useState(true);
+  const [generateQnA, setGenerateQnA] = useState(false);
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [progressText, setProgressText] = useState('');
+  const [isHovering, setIsHovering] = useState(false);
+
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    setFiles(selectedFiles);
+  };
+
+  const handleSummarize = async () => {
+    if (files.length === 0 && !text.trim()) {
+      alert('Please provide text or upload at least one file.');
+      return;
+    }
+
+    const formData = new FormData();
+    files.forEach(file => formData.append('pdf_files', file));
+    if (text.trim()) formData.append('texts', text.trim());
+    formData.append('summary_level', summaryLevel);
+
+    try {
+      setLoading(true);
+      setProgressText('Generating summary...');
+
+      const res = await fetch('http://localhost:5000/summarizes', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      setResult(data.summary || 'No summary returned.');
+
+      if (generateQnA) {
+        setProgressText('Generating QnA...');
+        const qnaForm = new FormData();
+        if (files[0]) qnaForm.append('file', files[0]);
+        if (text.trim()) qnaForm.append('text', text.trim());
+
+        const qnaRes = await fetch('http://localhost:5000/upload', {
+          method: 'POST',
+          body: qnaForm
+        });
+        const qna = await qnaRes.json();
+        setQnaData(qna.answers || []);
+      }
+
+      if (generateFlashcards) {
+        setProgressText('Generating flashcards...');
+        const fcForm = new FormData();
+        if (files[0]) fcForm.append('file', files[0]);
+        if (text.trim()) fcForm.append('texts', text.trim());
+
+        const fcRes = await fetch('http://localhost:5000/uploads', {
+          method: 'POST',
+          body: fcForm
+        });
+        const fc = await fcRes.json();
+        setFlashcardsData(fc.summary || []);
+      }
+
+      setProgressText('Done!');
+    } catch (err) {
+      console.error('Error:', err);
+      setResult('Error contacting backend.');
+      setProgressText('An error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const styles = {
+    container: {
+      maxWidth: 700,
+      margin: '40px auto',
+      textAlign: 'center',
+      padding: 20,
+      color: '#fff',
+      fontFamily: 'Segoe UI, sans-serif',
+      //backgroundColor: '#0f1117',
+    },
+    uploadBox: {
+      border: '2px dashed #3d3d3d',
+      borderRadius: 8,
+      padding: '40px 20px',
+      color: '#ccc',
+      cursor: 'pointer',
+      margin: '20px 0',
+      textAlign: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: isHovering ? '#374151' : '#192231',
+      transition: 'background 0.3s',
+    },   
+    textarea: {
+      width: '100%',
+      minHeight: 150,
+      background: '#1F2938',
+      color: '#fff',
+      border: '1px solid #333',
+      borderRadius: 8,
+      padding: 12,
+      marginTop: 16,
+      resize: 'vertical',
+    },
+    actions: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      marginTop: 20,
+      gap: 12,
+    },
+    select: {
+      background: '#374151',
+      color: 'white',
+      border: 'none',
+      padding: 8,
+      borderRadius: 4,
+    },
+    label: {
+      color: '#ccc',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 6,
+    },
+    button: {
+      padding: '10px 20px',
+      borderRadius: 6,
+      border: 'none',
+      color: 'white',
+      cursor: 'pointer',
+      backgroundColor: '#4F46E5',
+    },
+    loadingBox: {
+      marginTop: 20,
+      padding: 10,
+      backgroundColor: '#20283A',
+      //border: '1px solid #cbd5e1',
+      borderRadius: 6,
+      textAlign: 'center',
+    },
+    resultBox: {
+      background: '#111827',
+      padding: 20,
+      borderRadius: 8,
+      marginTop: 24,
+      textAlign: 'left',
+      whiteSpace: 'pre-wrap',
+    },
+  };
+
+  return (
+    <div style={styles.container}>
+      <h2>Instant Summarize + QnA + Flashcards</h2>
+
+      <label
+        style={styles.uploadBox}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+      
+        <input type="file" onChange={handleFileChange} multiple hidden />
+        <div>
+          📤 <strong>Click to upload</strong><br />
+          {files.map((file, idx) => <p key={idx}>📄 {file.name}</p>)}
+        </div>
+      </label>
+
+      <textarea
+        style={styles.textarea}
+        placeholder="Or paste your text here..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+      ></textarea>
+
+      <div style={styles.actions}>
+        <select
+          value={summaryLevel}
+          onChange={(e) => setSummaryLevel(e.target.value)}
+          style={styles.select}
+        >
+          <option value="abstract">Abstract</option>
+          <option value="summary">Summary</option>
+          <option value="article">Article</option>
+        </select>
+
+        <label style={styles.label}>
+          <input
+            type="checkbox"
+            checked={generateFlashcards}
+            onChange={() => setGenerateFlashcards(!generateFlashcards)}
+          />
+          Generate Flashcards
+        </label>
+
+        <label style={styles.label}>
+          <input
+            type="checkbox"
+            checked={generateQnA}
+            onChange={() => setGenerateQnA(!generateQnA)}
+          />
+          Generate QnA
+        </label>
+
+        <button style={styles.button} onClick={handleSummarize}>Summarize</button>
+      </div>
+
+      {loading && (
+        <div style={styles.loadingBox}>
+          <p>{progressText}</p>
+          <progress style={{ width: '100%' }} />
+        </div>
+      )}
+
+      {result && (
+        <div style={styles.resultBox}>
+          <h3>Summary:</h3>
+          <pre>{result}</pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Summarizer;
+
+
+
+//QnAGenerator.js
+
+import React, { useState } from "react";
+
+function QnAGenerator({ qnaData = [], setQnaData }) {
+  const [text, setText] = useState('');
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [progressText, setProgressText] = useState('');
+  const [isHovering, setIsHovering] = useState(false);
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    setFile(selected);
+    setFileName(selected?.name || '');
+  };
+
+  const handleGenerateQnA = async () => {
+    if (!file && !text.trim()) {
+      alert('Please provide text or upload a file.');
+      return;
+    }
+
+    const formData = new FormData();
+    if (file) formData.append('file', file);
+    if (text.trim()) formData.append('text', text.trim());
+
+    try {
+      setLoading(true);
+      setProgressText('Generating QnA...');
+
+      const res = await fetch('http://localhost:5000/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      setQnaData(data.answers || []);
+      setProgressText('Done!');
+    } catch (err) {
+      console.error(err);
+      setProgressText('An error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClear = () => {
+    setText('');
+    setFile(null);
+    setFileName('');
+    setQnaData([]);
+  };
+
+  const handleDownload = () => {
+    if (qnaData.length === 0) return;
+
+    const content = qnaData
+      .map(pair => `Q: ${pair.question}\nA: ${pair.answer}`)
+      .join('\n\n');
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'qna.txt';
+    link.click();
+  };
+
+  const styles = {
+    container: {
+      maxWidth: 700,
+      margin: '40px auto',
+      textAlign: 'center',
+      padding: 20,
+      color: '#fff',
+      fontFamily: 'Segoe UI, sans-serif',
+      //backgroundColor: '#0f1117',
+      borderRadius: 8,
+    },
+    uploadBox: {
+      border: '2px dashed #3d3d3d',
+      borderRadius: 8,
+      padding: '40px 20px',
+      color: '#ccc',
+      cursor: 'pointer',
+      margin: '20px 0',
+      textAlign: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: isHovering ? '#374151' : '#192231',
+      transition: 'background 0.3s',
+    },
+    textarea: {
+      width: '100%',
+      minHeight: 150,
+      background: '#1F2938',
+      color: 'white',
+      border: '1px solid #333',
+      borderRadius: 8,
+      padding: 12,
+      marginTop: 16,
+      resize: 'vertical',
+    },
+    actions: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexWrap: 'wrap',
+      gap: 12,
+      marginTop: 20,
+    },
+    button: {
+      padding: '10px 20px',
+      borderRadius: 6,
+      border: 'none',
+      cursor: 'pointer',
+      color: 'white',
+    },
+    generateBtn: {
+      background: '#4F46E5',
+    },
+    clearBtn: {
+      background: '#374151',
+    },
+    downloadBtn: {
+      background: '#198754',
+    },
+    loadingBox: {
+      marginTop: 20,
+      padding: 10,
+      backgroundColor: '#20283A',
+      //border: '1px solid #cbd5e1',
+      borderRadius: 6,
+      textAlign: 'center',
+    },
+    resultBox: {
+      background: '#111827',
+      padding: 20,
+      borderRadius: 8,
+      marginTop: 24,
+      textAlign: 'left',
+    },
+  };
+
+  return (
+    <div style={styles.container}>
+      <h2>Instant QnA Generator</h2>
+
+      <label
+        style={styles.uploadBox}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        <input type="file" onChange={handleFileChange} hidden />
+        <div>
+          {/* <div style={{ fontSize: 32 }}>📤</div>
+          <strong>Click to upload</strong><br /> */}
+          📤 <strong>Click to upload</strong><br />
+          {/* <p style={{ fontSize: 14, color: '#aaa' }}>PDF, DOCX, TXT files supported</p> */}
+          {fileName && <p style={{ fontSize: 14, color: '#ccc' }}>📄 {fileName}</p>}
+        </div>
+      </label>
+
+      <textarea
+        placeholder="Or paste your text here..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        style={styles.textarea}
+      />
+
+      <div style={styles.actions}>
+        <button style={{ ...styles.button, ...styles.clearBtn }} onClick={handleClear}>
+          Clear
+        </button>
+        <button style={{ ...styles.button, ...styles.generateBtn }} onClick={handleGenerateQnA}>
+          Generate QnA
+        </button>
+        {qnaData.length > 0 && (
+          <button style={{ ...styles.button, ...styles.downloadBtn }} onClick={handleDownload}>
+            ⬇ Download
+          </button>
+        )}
+      </div>
+
+      {loading && (
+        <div style={styles.loadingBox}>
+          <p>{progressText}</p>
+          <progress style={{ width: '100%' }} />
+        </div>
+      )}
+
+      {qnaData.length > 0 && (
+        <div style={styles.resultBox}>
+          <h3>Generated QnA:</h3>
+          <ul>
+            {qnaData.map((pair, idx) => (
+              <li key={idx}>
+                <strong>Q:</strong> {pair.question}<br />
+                <strong>A:</strong> {pair.answer}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default QnAGenerator;
+
+
+//Flashcards.js
+
+import React, { useState } from 'react';
+
+function Flashcards({ flashcardsData = [], setFlashcardsData }) {
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState('');
+  const [text, setText] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [progressText, setProgressText] = useState('');
+  const [isHovering, setIsHovering] = useState(false);
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files[0];
+    setFile(selected);
+    setFileName(selected?.name || '');
+  };
+
+  const handleGenerateFlashcards = async () => {
+    if (!file && !text.trim()) {
+      alert('Please provide text or upload a file.');
+      return;
+    }
+
+    const formData = new FormData();
+    if (file) formData.append('file', file);
+    if (text.trim()) formData.append('texts', text.trim());
+
+    try {
+      setLoading(true);
+      setProgressText('Generating flashcards...');
+
+      const res = await fetch('http://localhost:5000/uploads', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      setFlashcardsData(data.summary || []);
+      setProgressText('Done!');
+    } catch (err) {
+      console.error(err);
+      setProgressText('An error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const styles = {
+    container: {
+      maxWidth: 700,
+      margin: '40px auto',
+      textAlign: 'center',
+      padding: 20,
+      color: '#fff',
+      fontFamily: 'Segoe UI, sans-serif',
+      //backgroundColor: '#0f1117',
+      borderRadius: 8,
+    },
+    uploadBox: {
+      border: '2px dashed #3d3d3d',
+      borderRadius: 8,
+      padding: '40px 20px',
+      color: '#ccc',
+      cursor: 'pointer',
+      margin: '20px 0',
+      textAlign: 'center',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: isHovering ? '#374151' : '#192231',
+      transition: 'background 0.3s',
+    },
+    textarea: {
+      width: '100%',
+      minHeight: 150,
+      background: '#1F2938',
+      color: '#fff',
+      border: '1px solid #333',
+      borderRadius: 8,
+      padding: 12,
+      marginTop: 16,
+      resize: 'vertical',
+    },
+    actions: {
+      display: 'flex',
+      justifyContent: 'space-between', 
+      alignItems: 'center',
+      marginTop: 20,
+      gap: 12,
+    },
+    button: {
+      padding: '10px 20px',
+      borderRadius: 6,
+      border: 'none',
+      color: 'white',
+      cursor: 'pointer',
+      backgroundColor: '#4F46E5',
+    },
+    clearButton: {
+      backgroundColor: '#374151',
+    },
+    downloadButton: {
+      backgroundColor: '#198754',
+    },
+    loadingBox: {
+      marginTop: 20,
+      padding: 10,
+      backgroundColor: '#20283A',
+      //border: '1px solid #cbd5e1',
+      borderRadius: 6,
+      textAlign: 'center',
+    },
+    resultBox: {
+      background: '#111827',
+      padding: 20,
+      borderRadius: 8,
+      marginTop: 24,
+      textAlign: 'left',
+      whiteSpace: 'pre-wrap',
+    },
+    flashcard: {
+      backgroundColor: '#292c33',
+      borderRadius: 8,
+      padding: 16,
+      marginBottom: 12,
+      boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+      cursor: 'default',
+      color: '#fff',
+      userSelect: 'none',
+    },
+  };
+
+  return (
+    <div style={styles.container}>
+      <h2>Flashcard Generator</h2>
+
+      <label
+        style={styles.uploadBox}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        <input type="file" onChange={handleFileChange} hidden />
+        <div>
+          📤 <strong>Click to upload</strong><br />
+          {fileName && <p style={{ color: '#ccc' }}>📄 {fileName}</p>}
+        </div>
+      </label>
+
+      <textarea
+        placeholder="Or paste your text here..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        style={styles.textarea}
+      />
+
+      <div style={styles.actions}>
+      <button
+    style={{ ...styles.button, ...styles.clearButton }}
+    onClick={() => {
+      setText('');
+      setFile(null);
+      setFileName('');
+      setFlashcardsData([]);
+    }}
+  >
+    Clear
+  </button>
+
+  <button style={styles.button} onClick={handleGenerateFlashcards}>
+    Generate Flashcards
+  </button>
+
+        {flashcardsData.length > 0 && (
+          <button
+            style={{ ...styles.button, ...styles.downloadButton }}
+            onClick={() => {
+              const blob = new Blob([flashcardsData.join('\n\n')], {
+                type: 'text/plain;charset=utf-8',
+              });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = 'flashcards.txt';
+              link.click();
+            }}
+          >
+            ⬇ Download
+          </button>
+        )}
+      </div>
+
+      {loading && (
+        <div style={styles.loadingBox}>
+          <p>{progressText}</p>
+          <progress style={{ width: '100%' }} />
+        </div>
+      )}
+
+      {flashcardsData.length > 0 && (
+        <div style={styles.resultBox}>
+          <h3>Flashcards:</h3>
+          {flashcardsData.map((item, idx) => (
+            <div key={idx} style={styles.flashcard}>
+              {item}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default Flashcards;
+
+
+
+#app.py
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from summarizer import generate_summary
+from qna import generate_qna
+from flashcards import generate_flashcards
+from pdf_utils import extract_texts
+
+app = Flask(__name__)
+CORS(app)
+
+@app.route('/summarizes', methods=['POST'])
+def summarize():
+    files = request.files.getlist('pdf_files')
+    text = request.form.get('texts', '')
+    level = request.form.get('summary_level', 'summary')
+    
+    full_text = extract_texts(files, text)
+    summary = generate_summary(full_text, level)
+    return jsonify({'summary': summary})
+
+@app.route('/upload', methods=['POST'])
+def qna():
+    files = request.files.getlist('file')
+    text = request.form.get('text', '')
+    
+    full_text = extract_texts(files, text)
+    qa_pairs = generate_qna(full_text)
+    return jsonify({'answers': qa_pairs})
+
+@app.route('/uploads', methods=['POST'])
+def flashcards():
+    files = request.files.getlist('file')
+    text = request.form.get('texts', '')
+    
+    full_text = extract_texts(files, text)
+    cards = generate_flashcards(full_text)
+    return jsonify({'summary': cards})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
+#summarizer.py
+
+from transformers import pipeline
+
+summarizer = pipeline("summarization", model="facebook/bart-large-cnn")
+
+def generate_summary(text, level="summary"):
+    max_len = {"abstract": 60, "summary": 120, "article": 300}.get(level, 120)
+    if len(text) == 0:
+        return "No content to summarize."
+    chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
+    result = []
+    for chunk in chunks:
+        summary = summarizer(chunk, max_length=max_len, min_length=30, do_sample=False)[0]['summary_text']
+        result.append(summary)
+    return '\n'.join(result)
+
+
+#qna.py
+
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+import torch
+
+# Load the question generation model
+tokenizer = AutoTokenizer.from_pretrained("valhalla/t5-base-qg-hl")
+model = AutoModelForSeq2SeqLM.from_pretrained("valhalla/t5-base-qg-hl")
+
+def generate_qna(text):
+    # Highlight sentence for QG
+    sentences = [s.strip() for s in text.split('.') if len(s.strip()) > 20]
+    if not sentences:
+        return []
+
+    results = []
+    for sentence in sentences[:5]:  # Limit to avoid slowdowns
+        input_text = f"highlight: {sentence} context: {text}"
+        inputs = tokenizer.encode(input_text, return_tensors="pt", max_length=512, truncation=True)
+        outputs = model.generate(inputs, max_new_tokens=64)
+        question = tokenizer.decode(outputs[0], skip_special_tokens=True)
+        results.append({
+            "question": question,
+            "answer": sentence
+        })
+    return results
+
+
+
+#flashcards.py
+
+import re
+
+def generate_flashcards(text):
+    lines = [line.strip() for line in text.split('.') if len(line.strip()) > 20]
+    cards = [f"Q: What is the meaning of: \"{line[:80]}...?\"\nA: {line}" for line in lines[:10]]
+    return cards
+
+
+
+#pdf_utils.py
+
+import fitz  # PyMuPDF
+import docx
+import pptx
+import pytesseract
+from PIL import Image
+import io
+import pandas as pd
+
+def extract_texts(files, raw_text):
+    text = raw_text.strip() + "\n" if raw_text else ""
+
+    for file in files:
+        filename = file.filename.lower()
+        content = file.read()
+
+        if filename.endswith(".pdf"):
+            try:
+                doc = fitz.open(stream=content, filetype="pdf")
+                for page in doc:
+                    text += page.get_text() + "\n"
+            except Exception as e:
+                text += f"\n[Error reading PDF: {str(e)}]\n"
+
+        elif filename.endswith(".docx"):
+            try:
+                doc = docx.Document(io.BytesIO(content))
+                for para in doc.paragraphs:
+                    text += para.text + "\n"
+            except Exception as e:
+                text += f"\n[Error reading DOCX: {str(e)}]\n"
+
+        elif filename.endswith(".pptx"):
+            try:
+                presentation = pptx.Presentation(io.BytesIO(content))
+                for slide in presentation.slides:
+                    for shape in slide.shapes:
+                        if hasattr(shape, "text"):
+                            text += shape.text + "\n"
+            except Exception as e:
+                text += f"\n[Error reading PPTX: {str(e)}]\n"
+
+        elif filename.endswith(".xlsx"):
+            try:
+                excel_file = pd.ExcelFile(io.BytesIO(content))
+                for sheet_name in excel_file.sheet_names:
+                    df = excel_file.parse(sheet_name)
+                    text += f"--- Sheet: {sheet_name} ---\n"
+                    text += df.astype(str).to_string(index=False) + "\n"
+            except Exception as e:
+                text += f"\n[Error reading XLSX: {str(e)}]\n"
+
+        elif filename.endswith(".txt"):
+            try:
+                text += content.decode("utf-8", errors="ignore") + "\n"
+            except Exception as e:
+                text += f"\n[Error reading TXT: {str(e)}]\n"
+
+        elif filename.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
+            try:
+                img = Image.open(io.BytesIO(content))
+                text += pytesseract.image_to_string(img) + "\n"
+            except Exception as e:
+                text += f"\n[Error reading image: {str(e)}]\n"
+
+        else:
+            text += f"\n[Unsupported file type: {filename}]\n"
+
+    return text.strip()
+
+requirements.txt
+
+Flask
+flask-cors
+transformers==4.35.2
+torch
+PyMuPDF
+python-docx
+python-pptx
+pytesseract
+Pillow
+pandas
+openpyxl
+sentencepiece
+protobuf
+
