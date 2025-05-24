@@ -1,0 +1,62 @@
+/* Base styling */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #192231;
+  color: white;
+  padding-top: 60px
+}
+
+.App {
+  padding: 20px;
+}
+
+/* Navigation Bar */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background-color: #0e1420;
+  border-bottom: 1px solid #2d333b;
+}
+
+
+.logo {
+  color: #7F8AF4;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 16px;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  color: #b0b9cc;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 6px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.nav-btn:hover {
+  background-color: #2d3748;
+  color: white;
+}
+
+.nav-btn.active {
+  background-color: #4F46E5;
+  color: white;
+}
+
