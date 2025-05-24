@@ -1,12 +1,13 @@
 Flask
 flask-cors
-transformers
+transformers==4.35.2
 torch
 PyMuPDF
 python-docx
 python-pptx
 pytesseract
 Pillow
-textract
 pandas
 openpyxl
+sentencepiece
+protobuf
