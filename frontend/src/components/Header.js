@@ -23,6 +23,13 @@ function Header({ activeTab, setActiveTab }) {
         >
           Flashcards
         </button>
+        <button
+          className={activeTab === 'quiz' ? 'nav-btn active' : 'nav-btn'}
+          onClick={() => setActiveTab('quiz')}
+        >
+          Quiz
+        </button>
+
       </div>
     </nav>
   );

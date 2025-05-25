@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
-function QnAGenerator({ qnaData = [], setQnaData }) {
+function QuizComponent() {
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState('');
+  const [quiz, setQuiz] = useState([]);
   const [loading, setLoading] = useState(false);
   const [progressText, setProgressText] = useState('');
   const [isHovering, setIsHovering] = useState(false);
@@ -14,7 +15,7 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
     setFileName(selected?.name || '');
   };
 
-  const handleGenerateQnA = async () => {
+  const handleGenerateQuiz = async () => {
     if (!file && !text.trim()) {
       alert('Please provide text or upload a file.');
       return;
@@ -24,20 +25,18 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
     if (file) formData.append('file', file);
     if (text.trim()) formData.append('text', text.trim());
 
+    setLoading(true);
+    setProgressText('Generating quiz...');
     try {
-      setLoading(true);
-      setProgressText('Generating QnA...');
-
-      const res = await fetch('http://localhost:5000/upload', {
+      const res = await fetch('http://localhost:5000/quiz', {
         method: 'POST',
-        body: formData
+        body: formData,
       });
-
       const data = await res.json();
-      setQnaData(data.answers || []);
+      setQuiz(Array.isArray(data.quiz) ? data.quiz : []);
       setProgressText('Done!');
     } catch (err) {
-      console.error(err);
+      console.error('Quiz error:', err);
       setProgressText('An error occurred.');
     } finally {
       setLoading(false);
@@ -48,20 +47,19 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
     setText('');
     setFile(null);
     setFileName('');
-    setQnaData([]);
+    setQuiz([]);
   };
 
   const handleDownload = () => {
-    if (qnaData.length === 0) return;
+    if (quiz.length === 0) return;
 
-    const content = qnaData
-      .map(pair => `Q: ${pair.question}\nA: ${pair.answer}`)
-      .join('\n\n');
-
+    const content = quiz
+      .map((q, idx) => `Q${idx + 1}: ${q.question}\nOptions: ${q.options.join(', ')}\nAnswer: ${q.correct_answer}\n`)
+      .join('\n');
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'qna.txt';
+    link.download = 'quiz.txt';
     link.click();
   };
 
@@ -74,6 +72,7 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       color: '#fff',
       fontFamily: 'Segoe UI, sans-serif',
       borderRadius: 8,
+      //backgroundColor: '#1F2938',
     },
     uploadBox: {
       border: '2px dashed #3d3d3d',
@@ -94,7 +93,7 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       width: '100%',
       minHeight: 150,
       background: '#1F2938',
-      color: 'white',
+      color: '#fff',
       border: '1px solid #333',
       borderRadius: 8,
       padding: 12,
@@ -103,11 +102,10 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
     },
     actions: {
       display: 'flex',
-      alignItems: 'center',
       justifyContent: 'space-between',
-      flexWrap: 'wrap',
-      gap: 12,
+      alignItems: 'center',
       marginTop: 20,
+      gap: 12,
     },
     button: {
       padding: '10px 20px',
@@ -115,15 +113,13 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       border: 'none',
       cursor: 'pointer',
       color: 'white',
+      backgroundColor: '#4F46E5',
     },
-    generateBtn: {
-      background: '#4F46E5',
+    clearButton: {
+      backgroundColor: '#374151',
     },
-    clearBtn: {
-      background: '#374151',
-    },
-    downloadBtn: {
-      background: '#AEB1CA',
+    downloadButton: {
+      backgroundColor: '#AEB1CA',
     },
     loadingBox: {
       marginTop: 20,
@@ -132,36 +128,34 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       borderRadius: 6,
       textAlign: 'center',
     },
-    resultBox: {
+    quizBox: {
+      marginTop: 24,
       background: '#111827',
       padding: 20,
       borderRadius: 8,
-      marginTop: 24,
       textAlign: 'left',
     },
-    qnaCard: {
-      backgroundColor: '#1E293B',
-      borderRadius: 12,
+    questionBox: {
+      marginBottom: 16,
+      background: '#1E293B',
       padding: 16,
-      marginBottom: 12,
-      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
-      color: '#93C5FD',
-      fontSize: '1rem',
-      textAlign: 'left',
+      borderRadius: 8,
+      boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
     },
     question: {
-      color: 'rgb(95, 163, 247)',
+      color: '#93C5FD',
+      fontSize: '1rem',
       marginBottom: 8,
     },
     answer: {
       color: '#F3F4F6',
+      fontSize: '0.9rem',
     },
   };
 
   return (
     <div style={styles.container}>
-      <h2>Instant QnA Generator</h2>
-
+      <h2>Quiz Generator</h2>
       <label
         style={styles.uploadBox}
         onMouseEnter={() => setIsHovering(true)}
@@ -169,27 +163,25 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       >
         <input type="file" onChange={handleFileChange} hidden />
         <div>
-          📤 <strong>Click to upload</strong><br />
-          {fileName && <p style={{ fontSize: 14, color: '#ccc' }}>📄 {fileName}</p>}
+          📤 <strong>Click to upload</strong>
+          {fileName && <p style={{ color: '#ccc', marginTop: 8 }}>📄 {fileName}</p>}
         </div>
       </label>
-
       <textarea
-        placeholder="Or paste your text here..."
         value={text}
         onChange={(e) => setText(e.target.value)}
+        placeholder="Or paste your content here..."
         style={styles.textarea}
       />
-
       <div style={styles.actions}>
-        <button style={{ ...styles.button, ...styles.clearBtn }} onClick={handleClear}>
+        <button style={{ ...styles.button, ...styles.clearButton }} onClick={handleClear}>
           Clear
         </button>
-        <button style={{ ...styles.button, ...styles.generateBtn }} onClick={handleGenerateQnA}>
-          Generate QnA
+        <button style={styles.button} onClick={handleGenerateQuiz}>
+          Generate Quiz
         </button>
-        {qnaData.length > 0 && (
-          <button style={{ ...styles.button, ...styles.downloadBtn }} onClick={handleDownload}>
+        {quiz.length > 0 && (
+          <button style={{ ...styles.button, ...styles.downloadButton }} onClick={handleDownload}>
             ⬇ Download
           </button>
         )}
@@ -202,13 +194,17 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
         </div>
       )}
 
-      {qnaData.length > 0 && (
-        <div style={styles.resultBox}>
-          <h3>Generated QnA:</h3>
-          {qnaData.map((pair, idx) => (
-            <div key={idx} style={styles.qnaCard}>
-              <p style={styles.question}><strong>Q:</strong> {pair.question}</p>
-              <p style={styles.answer}><strong>A:</strong> {pair.answer}</p>
+      {quiz.length > 0 && (
+        <div style={styles.quizBox}>
+          <h3>Generated Quiz:</h3>
+          {quiz.map((q, idx) => (
+            <div key={idx} style={styles.questionBox}>
+              <p style={styles.question}>
+                <strong>Q{idx + 1}:</strong> {q.question}
+              </p>
+              <p style={styles.answer}>
+                <strong>Answer:</strong> {q.correct_answer}
+              </p>
             </div>
           ))}
         </div>
@@ -217,4 +213,4 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
   );
 }
 
-export default QnAGenerator;
+export default QuizComponent;

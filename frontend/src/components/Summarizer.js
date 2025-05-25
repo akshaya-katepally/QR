@@ -101,7 +101,7 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
       justifyContent: 'center',
       backgroundColor: isHovering ? '#374151' : '#192231',
       transition: 'background 0.3s',
-    },   
+    },
     textarea: {
       width: '100%',
       minHeight: 150,
@@ -157,6 +157,10 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
       marginTop: 24,
       textAlign: 'left',
       whiteSpace: 'pre-wrap',
+      wordWrap: 'break-word',
+      overflowWrap: 'break-word',
+      width: '100%',
+      boxSizing: 'border-box',
     },
   };
 
@@ -169,7 +173,7 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
-      
+
         <input type="file" onChange={handleFileChange} multiple hidden />
         <div>
           📤 <strong>Click to upload</strong><br />
@@ -226,9 +230,10 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
       {result && (
         <div style={styles.resultBox}>
           <h3>Summary:</h3>
-          <pre>{result}</pre>
+          <div>{result}</div>
         </div>
       )}
+
     </div>
   );
 }

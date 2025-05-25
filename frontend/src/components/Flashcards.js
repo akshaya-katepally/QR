@@ -83,7 +83,7 @@ function Flashcards({ flashcardsData = [], setFlashcardsData }) {
     },
     actions: {
       display: 'flex',
-      justifyContent: 'space-between', 
+      justifyContent: 'space-between',
       alignItems: 'center',
       marginTop: 20,
       gap: 12,
@@ -119,7 +119,7 @@ function Flashcards({ flashcardsData = [], setFlashcardsData }) {
       whiteSpace: 'pre-wrap',
     },
     flashcard: {
-      backgroundColor: '#292c33',
+      backgroundColor: '#182030',
       borderRadius: 8,
       padding: 16,
       marginBottom: 12,
@@ -154,21 +154,21 @@ function Flashcards({ flashcardsData = [], setFlashcardsData }) {
       />
 
       <div style={styles.actions}>
-      <button
-    style={{ ...styles.button, ...styles.clearButton }}
-    onClick={() => {
-      setText('');
-      setFile(null);
-      setFileName('');
-      setFlashcardsData([]);
-    }}
-  >
-    Clear
-  </button>
+        <button
+          style={{ ...styles.button, ...styles.clearButton }}
+          onClick={() => {
+            setText('');
+            setFile(null);
+            setFileName('');
+            setFlashcardsData([]);
+          }}
+        >
+          Clear
+        </button>
 
-  <button style={styles.button} onClick={handleGenerateFlashcards}>
-    Generate Flashcards
-  </button>
+        <button style={styles.button} onClick={handleGenerateFlashcards}>
+          Generate Flashcards
+        </button>
 
         {flashcardsData.length > 0 && (
           <button
