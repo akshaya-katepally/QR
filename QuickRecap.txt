@@ -2,16 +2,19 @@ Project structure:
 >QR
   >frontend
     >public
+      -index.html
     >src
-      App.js
-      App.css
-      index.js			
-      index.css
+      -App.js
+      -App.css
+      -index.js			
+      -index.css
       >components
-        Header.js
-        Summarizer.js
-        QnAGenerator.js
-        Flashcards.js
+        -LandingPage.js
+        -MainAppView.js
+        -Header.js
+        -Summarizer.js
+        -QnAGenerator.js
+        -Flashcards.js
   >backend
     -app.py
     -summarizer.py
@@ -19,33 +22,28 @@ Project structure:
     -flashcards.py
     -pdf_utils
     -requirements.txt
-
+  -README.md
 
 //App.js
 
-import React, { useState } from 'react';
-import Header from './components/Header';
-import Summarizer from './components/Summarizer';
-import Flashcards from './components/Flashcards';
-import QnAGenerator from './components/QnAGenerator';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import LandingPage from './components/LandingPage';
+import MainAppView from './components/MainAppView'; // Import the wrapper
 
 function App() {
-  const [activeTab, setActiveTab] = useState('summarize');
-  const [qnaData, setQnaData] = useState([]);
-  const [flashcardsData, setFlashcardsData] = useState([]);
-
   return (
-    <div className="App">
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-      {activeTab === 'summarize' && (
-        <Summarizer setQnaData={setQnaData} setFlashcardsData={setFlashcardsData} />
-      )}
-      {activeTab === 'qna' && <QnAGenerator qnaData={qnaData} setQnaData={setQnaData} />}
-      {activeTab === 'flashcards' && <Flashcards flashcardsData={flashcardsData} setFlashcardsData={setFlashcardsData} />}
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/app" element={<MainAppView />} />
+      </Routes>
+    </Router>
   );
+}
 
 export default App;
+
 
 
 
@@ -111,6 +109,398 @@ body {
 .nav-btn.active {
   background-color: #4F46E5;
   color: white;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+//index.js
+
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './App.css';
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+
+
+/*index.css*/
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+index.html
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quick Recap</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
+
+
+//LandingPage.js
+
+import React, { useState } from 'react';
+
+export default function LandingPage() {
+  const [hoveredCard, setHoveredCard] = useState(null);
+  const [hoveredStep, setHoveredStep] = useState(null);
+  const styles = {
+    container: {
+      fontFamily: 'Segoe UI, sans-serif',
+      backgroundColor: '#0e1420',
+      color: 'white',
+      margin: 0,
+      padding: 0,
+    },
+    navbar: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: '#0e1420',
+      padding: '16px 32px',
+      borderBottom: '1px solid #2d333b',
+      position: 'sticky',
+      top: 0,
+      zIndex: 100,
+    },
+    logo: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#7F8AF4',
+      cursor: 'pointer',
+    },
+    navLinks: {
+      display: 'flex',
+      gap: '20px',
+      paddingRight: '50px', 
+    },
+    navLink: {
+      color: '#b0b9cc',
+      textDecoration: 'none',
+      transition: 'color 0.3s',
+    },
+    hero: {
+      textAlign: 'center',
+      padding: '100px 20px 60px',
+      maxWidth: 800,
+      margin: '0 auto',
+    },
+    heroTitle: {
+      fontSize: '3em',
+      lineHeight: 1.2,
+      marginBottom: 20,
+      color: '#e2e8f0',
+    },
+    highlight: {
+      color: '#7F8AF4',
+    },
+    heroText: {
+      fontSize: '1.2em',
+      color: '#94a3b8',
+    },
+    launchBtn: {
+      display: 'inline-block',
+      marginTop: 40,
+      backgroundColor: '#4F46E5',
+      color: 'white',
+      padding: '14px 28px',
+      borderRadius: 10,
+      textDecoration: 'none',
+      fontWeight: 'bold',
+      boxShadow: '0 6px 15px rgba(79, 70, 229, 0.3)',
+    },
+    section: {
+      padding: '60px 20px',
+      maxWidth: 1000,
+      margin: '0 auto',
+    },
+    featuresGrid: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      gap: '80px',
+      marginTop: 60,
+    },
+    featureCard: (isHovered) => ({
+      backgroundColor: '#1f2938',
+      padding: 40,
+      borderRadius: 16,
+      width: '100%',
+      minHeight: 280,
+      boxShadow: isHovered
+        ? '0 0 20px 6px rgba(160, 169, 249, 0.7)'
+        : '0 0 10px 3px rgba(79, 70, 229, 0.7)',
+      transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+      transition: 'all 0.4s ease',
+      flex: 1,
+      textAlign: 'center',
+    }),
+    howSection: {
+      maxWidth: 900,
+      margin: '60px auto',
+      padding: '0 20px',
+      color: '#cbd5e1',
+      position: 'relative',
+    },
+    timeline: {
+      position: 'relative',
+      marginTop: 40,
+      padding: '40px 0',
+      width: '100%',
+    },
+    verticalLine: {
+      position: 'absolute',
+      left: '50%',
+      top: 0,
+      transform: 'translateX(-50%)',
+      width: 4,
+      height: '100%',
+      backgroundColor: '#4F46E5',
+      borderRadius: 2,
+    },
+    stepContainer: (isLeft) => ({
+      position: 'relative',
+      width: '45%',
+      padding: '20px 30px',
+      backgroundColor: '#1f2938',
+      borderRadius: 12,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+      color: 'white',
+      marginBottom: 50,
+      // Align left or right
+      left: isLeft ? '-8%' : '56%',
+      textAlign: isLeft ? 'right' : 'left',
+    }),
+    stepNumber: (isLeft) => ({
+      position: 'absolute',
+      top: 30,
+      width: 30,
+      height: 30,
+      borderRadius: '50%',
+      backgroundColor: '#4F46E5',
+      color: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: 'bold',
+      fontSize: 16,
+      boxShadow: '0 0 10px #4F46E5',
+      zIndex: 1,
+      // Position the number circle *outside* the box toward the line
+      right: isLeft ? -40 : 'auto',
+      left: isLeft ? 'auto' : -40,
+    }),
+    stepTitle: {
+      fontSize: '1.3em',
+      marginBottom: 10,
+      color: '#7F8AF4',
+    },
+    stepDesc: {
+      fontSize: '1em',
+      lineHeight: 1.5,
+      color: '#cbd5e1',
+    },
+    ul: {
+      marginTop: 20,
+      lineHeight: 1.8,
+      listStyle: 'none',
+      paddingLeft: 0,
+    },
+    footer: {
+      backgroundColor: '#0e1420',
+      padding: '60px 20px 40px',
+      color: '#cbd5e1',
+      textAlign: 'center',
+    },
+    emailInput: {
+      padding: '14px 20px',
+      borderRadius: 8,
+      border: 'none',
+      outline: 'none',
+      fontSize: '1em',
+      width: 250,
+      backgroundColor: '#1f2937',
+      color: '#fff',
+    },
+    subscribeBtn: {
+      padding: '14px 24px',
+      borderRadius: 8,
+      backgroundColor: '#4F46E5',
+      color: 'white',
+      fontWeight: 'bold',
+      fontSize: '1em',
+      border: 'none',
+      boxShadow: '0 4px 14px rgba(79, 70, 229, 0.5)',
+      cursor: 'pointer',
+      textDecoration: 'none',
+    },
+  };
+
+  return (
+    <div style={styles.container}>
+      <nav style={{ ...styles.navbar, position: 'fixed', width: '100%' }}>
+        <div
+          style={styles.logo}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
+          Quick Recap
+        </div>
+        <div style={styles.navLinks}>
+          <a href="#features" style={styles.navLink}>Features</a>
+          <a href="#how" style={styles.navLink}>How It Works</a>
+          <a href="#start" style={styles.navLink}>Get Started</a>
+        </div>
+      </nav>
+
+      <header style={{ ...styles.hero, paddingTop: '120px' }}>
+        <h1 style={styles.heroTitle}>
+          Supercharge Your Learning with <span style={styles.highlight}>Quick Recap</span>
+        </h1>
+        <p style={styles.heroText}>
+          Upload content and get instant summaries, flashcards, and QnA tailored for you.
+        </p>
+        <a href="/app" style={styles.launchBtn}>
+          Launch App
+        </a>
+      </header>
+
+      <section id="features" style={styles.section}>
+        <h2 style={{ textAlign: 'center', fontSize: '2.4em', color: '#e2e8f0' }}>Features</h2>
+        <div style={styles.featuresGrid}>
+          {["Summarizer", "Flashcards", "QnA Generator"].map((title, idx) => (
+            <div
+              key={idx}
+              onMouseEnter={() => setHoveredCard(idx)}
+              onMouseLeave={() => setHoveredCard(null)}
+              style={styles.featureCard(hoveredCard === idx)}
+            >
+              <h3 style={{ color: '#7F8AF4' }}>{title}</h3>
+              <p>
+                {title === "Summarizer"
+                  ? "Generate clean and concise summaries from PDFs, text, or even scanned documents using NLP models."
+                  : title === "Flashcards"
+                    ? "Create ready-to-study flashcards from your material with just one click — perfect for revision."
+                    : "Train smarter by generating potential questions & answers based on your uploaded or pasted content."}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="how" style={styles.howSection}>
+        <h2 style={{ textAlign: 'center', fontSize: '2.4em', color: '#e2e8f0' }}>
+          How It Works
+        </h2>
+        <div style={styles.timeline}>
+          <div style={styles.verticalLine} />
+          {[
+            {
+              title: 'Upload Files or Text',
+              desc: 'Supports PDFs, DOCX, PPTX, TXT, Excel sheets, and even images with OCR.',
+            },
+            {
+              title: 'Choose Your Output',
+              desc: 'Select summary format, or add Flashcards and QnA with one click.',
+            },
+            {
+              title: 'Generate Instantly',
+              desc: 'Our AI processes your content and returns results within seconds.',
+            },
+            {
+              title: 'Export and Save',
+              desc: 'Download summaries, QnA, or flashcards as text for your study kit.',
+            },
+          ].map((step, idx) => {
+            const isLeft = idx % 2 === 0;
+            return (
+              <div key={idx} style={styles.stepContainer(isLeft)}>
+                <div style={styles.stepNumber(isLeft)}>{idx + 1}</div>
+                <h4 style={styles.stepTitle}>{step.title}</h4>
+                <p style={styles.stepDesc}>{step.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section id="start" style={{ ...styles.section, backgroundColor: '#0e1420' }}>
+        <h2 style={{ textAlign: 'center', fontSize: '2.4em', color: '#e2e8f0' }}>
+          Ready to get started?
+        </h2>
+        <p style={{ marginBottom: 30, textAlign: 'center', color: '#cbd5e1' }}>
+          Enter your email to begin your journey.
+        </p>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <input type="email" placeholder="you@example.com" style={styles.emailInput} />
+          <a href="/app" style={styles.subscribeBtn}>
+            Get Started
+          </a>
+        </div>
+        <div style={{ marginTop: 40, display: 'flex', justifyContent: 'center', gap: 20 }}>
+          {['Twitter', 'GitHub', 'Discord', 'LinkedIn'].map((site, i) => (
+            <a key={i} href="#" style={{ color: '#7F8AF4', textDecoration: 'none' }}>
+              {site}
+            </a>
+          ))}
+        </div>
+        <p style={{ marginTop: 40, color: '#475569', fontSize: '0.9em', textAlign: 'center' }}>
+          © 2025 Quick Recap — Built for smarter learning
+        </p>
+      </section>
+
+    </div>
+  );
+}
+
+//MainAppView.js
+
+import React, { useState } from 'react';
+import Header from './Header';
+import Summarizer from './Summarizer';
+import Flashcards from './Flashcards';
+import QnAGenerator from './QnAGenerator';
+
+export default function MainAppView() {
+  const [activeTab, setActiveTab] = useState('summarize');
+  const [qnaData, setQnaData] = useState([]);
+  const [flashcardsData, setFlashcardsData] = useState([]);
+
+  return (
+    <div className="App">
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      {activeTab === 'summarize' && (
+        <Summarizer setQnaData={setQnaData} setFlashcardsData={setFlashcardsData} />
+      )}
+      {activeTab === 'qna' && (
+        <QnAGenerator qnaData={qnaData} setQnaData={setQnaData} />
+      )}
+      {activeTab === 'flashcards' && (
+        <Flashcards flashcardsData={flashcardsData} setFlashcardsData={setFlashcardsData} />
+      )}
+    </div>
+  );
 }
 
 
@@ -257,7 +647,7 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
       justifyContent: 'center',
       backgroundColor: isHovering ? '#374151' : '#192231',
       transition: 'background 0.3s',
-    },   
+    },
     textarea: {
       width: '100%',
       minHeight: 150,
@@ -313,6 +703,10 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
       marginTop: 24,
       textAlign: 'left',
       whiteSpace: 'pre-wrap',
+      wordWrap: 'break-word',
+      overflowWrap: 'break-word',
+      width: '100%',
+      boxSizing: 'border-box',
     },
   };
 
@@ -325,7 +719,7 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
-      
+
         <input type="file" onChange={handleFileChange} multiple hidden />
         <div>
           📤 <strong>Click to upload</strong><br />
@@ -382,9 +776,10 @@ function Summarizer({ setQnaData, setFlashcardsData }) {
       {result && (
         <div style={styles.resultBox}>
           <h3>Summary:</h3>
-          <pre>{result}</pre>
+          <div>{result}</div>
         </div>
       )}
+
     </div>
   );
 }
@@ -470,7 +865,6 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       padding: 20,
       color: '#fff',
       fontFamily: 'Segoe UI, sans-serif',
-      //backgroundColor: '#0f1117',
       borderRadius: 8,
     },
     uploadBox: {
@@ -521,13 +915,12 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       background: '#374151',
     },
     downloadBtn: {
-      background: '#198754',
+      background: '#AEB1CA',
     },
     loadingBox: {
       marginTop: 20,
       padding: 10,
       backgroundColor: '#20283A',
-      //border: '1px solid #cbd5e1',
       borderRadius: 6,
       textAlign: 'center',
     },
@@ -537,6 +930,23 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       borderRadius: 8,
       marginTop: 24,
       textAlign: 'left',
+    },
+    qnaCard: {
+      backgroundColor: '#1E293B',
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 12,
+      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3)',
+      color: '#93C5FD',
+      fontSize: '1rem',
+      textAlign: 'left',
+    },
+    question: {
+      color: 'rgb(95, 163, 247)',
+      marginBottom: 8,
+    },
+    answer: {
+      color: '#F3F4F6',
     },
   };
 
@@ -551,10 +961,7 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       >
         <input type="file" onChange={handleFileChange} hidden />
         <div>
-          {/* <div style={{ fontSize: 32 }}>📤</div>
-          <strong>Click to upload</strong><br /> */}
           📤 <strong>Click to upload</strong><br />
-          {/* <p style={{ fontSize: 14, color: '#aaa' }}>PDF, DOCX, TXT files supported</p> */}
           {fileName && <p style={{ fontSize: 14, color: '#ccc' }}>📄 {fileName}</p>}
         </div>
       </label>
@@ -590,14 +997,12 @@ function QnAGenerator({ qnaData = [], setQnaData }) {
       {qnaData.length > 0 && (
         <div style={styles.resultBox}>
           <h3>Generated QnA:</h3>
-          <ul>
-            {qnaData.map((pair, idx) => (
-              <li key={idx}>
-                <strong>Q:</strong> {pair.question}<br />
-                <strong>A:</strong> {pair.answer}
-              </li>
-            ))}
-          </ul>
+          {qnaData.map((pair, idx) => (
+            <div key={idx} style={styles.qnaCard}>
+              <p style={styles.question}><strong>Q:</strong> {pair.question}</p>
+              <p style={styles.answer}><strong>A:</strong> {pair.answer}</p>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -694,7 +1099,7 @@ function Flashcards({ flashcardsData = [], setFlashcardsData }) {
     },
     actions: {
       display: 'flex',
-      justifyContent: 'space-between', 
+      justifyContent: 'space-between',
       alignItems: 'center',
       marginTop: 20,
       gap: 12,
@@ -711,7 +1116,7 @@ function Flashcards({ flashcardsData = [], setFlashcardsData }) {
       backgroundColor: '#374151',
     },
     downloadButton: {
-      backgroundColor: '#198754',
+      backgroundColor: '#AEB1CA',
     },
     loadingBox: {
       marginTop: 20,
@@ -730,7 +1135,7 @@ function Flashcards({ flashcardsData = [], setFlashcardsData }) {
       whiteSpace: 'pre-wrap',
     },
     flashcard: {
-      backgroundColor: '#292c33',
+      backgroundColor: '#182030',
       borderRadius: 8,
       padding: 16,
       marginBottom: 12,
@@ -765,21 +1170,21 @@ function Flashcards({ flashcardsData = [], setFlashcardsData }) {
       />
 
       <div style={styles.actions}>
-      <button
-    style={{ ...styles.button, ...styles.clearButton }}
-    onClick={() => {
-      setText('');
-      setFile(null);
-      setFileName('');
-      setFlashcardsData([]);
-    }}
-  >
-    Clear
-  </button>
+        <button
+          style={{ ...styles.button, ...styles.clearButton }}
+          onClick={() => {
+            setText('');
+            setFile(null);
+            setFileName('');
+            setFlashcardsData([]);
+          }}
+        >
+          Clear
+        </button>
 
-  <button style={styles.button} onClick={handleGenerateFlashcards}>
-    Generate Flashcards
-  </button>
+        <button style={styles.button} onClick={handleGenerateFlashcards}>
+          Generate Flashcards
+        </button>
 
         {flashcardsData.length > 0 && (
           <button
@@ -868,6 +1273,11 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
+
+# /usr/local/bin/python3.11 -m venv ~/venv311
+# source ~/venv311/bin/activate
+# pip install -r requirements.txt
+
 #summarizer.py
 
 from transformers import pipeline
@@ -884,6 +1294,7 @@ def generate_summary(text, level="summary"):
         summary = summarizer(chunk, max_length=max_len, min_length=30, do_sample=False)[0]['summary_text']
         result.append(summary)
     return '\n'.join(result)
+
 
 
 #qna.py
@@ -918,11 +1329,52 @@ def generate_qna(text):
 #flashcards.py
 
 import re
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
+from transformers import pipeline
+
+# Ensure you download the necessary NLTK data files
+nltk.download('punkt')
+nltk.download('stopwords')
+
+# Load the pre-trained T5 model for summarization
+summarizer = pipeline("summarization", model="t5-small")
+
+def extract_keywords(sentence):
+    """Extract keywords from a sentence by removing stopwords and punctuation."""
+    stop_words = set(stopwords.words('english'))
+    words = word_tokenize(sentence)
+    keywords = [word for word in words if word.isalnum() and word.lower() not in stop_words]
+    return keywords
 
 def generate_flashcards(text):
-    lines = [line.strip() for line in text.split('.') if len(line.strip()) > 20]
-    cards = [f"Q: What is the meaning of: \"{line[:80]}...?\"\nA: {line}" for line in lines[:10]]
-    return cards
+    """Generate meaningful flashcards from the input text using a pre-trained model."""
+    # Tokenize the text into sentences
+    sentences = sent_tokenize(text)
+    
+    # Filter sentences to include only meaningful ones
+    meaningful_sentences = [sentence for sentence in sentences if len(sentence.split()) > 5]
+    
+    # Generate flashcards
+    flashcards = []
+    for sentence in meaningful_sentences[:10]:  # Limit to 10 flashcards
+        question, answer = create_flashcard(sentence)
+        if question and answer:
+            flashcards.append(f"Q: {question}\nA: {answer}")
+    
+    return flashcards
+
+def create_flashcard(sentence):
+    """Create a meaningful question and answer pair from a sentence using a pre-trained model."""
+    # Use the summarizer to generate a concise summary of the sentence
+    summary = summarizer(sentence, max_length=20, min_length=5, do_sample=False)[0]['summary_text']
+    
+    # Generate a question based on the summary
+    question = f"What is the main idea of the following sentence?"
+    answer = summary
+    
+    return question, answer
 
 
 
@@ -1012,4 +1464,5 @@ pandas
 openpyxl
 sentencepiece
 protobuf
+
 
