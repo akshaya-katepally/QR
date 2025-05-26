@@ -50,7 +50,7 @@ export default function LandingPage() {
     },
     hero: {
       textAlign: 'center',
-      padding: '220px 20px 60px',
+      padding: '230px 20px 60px',
       maxWidth: 800,
       margin: '0 auto',
     },
@@ -63,7 +63,7 @@ export default function LandingPage() {
     highlight: {
       fontSize: '1.5em',
       color: '#7F8AF4',
-      textShadow: '0 6px 15px rgba(170, 166, 244, 0.66)',
+      textShadow: '0 2px 15px rgba(170, 166, 244, 0.66)',
     },
     heroText: {
       fontSize: '1.2em',
